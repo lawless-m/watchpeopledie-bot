@@ -1,0 +1,82 @@
+#!/bin/gawk -f
+
+# ./liveleak -v un=$LIVELEAK_USERNAME -v pw=$LIVELEAK_PASSWORD -v fname=$FILENAME_TO_UPLOAD
+
+function login() {
+	cmd = "curl -s --dump-header liveleak.cookies -F user_name=" un " -F user_password=" pw " -F login=1 -o /dev/null http://www.liveleak.com/index.php"
+	while((cmd|getline) >0) {}
+	close(cmd)
+}
+
+function setup() {
+	cmd = "curl -s -i -b liveleak.cookies -o /dev/null http://www.liveleak.com/"
+	while((cmd|getline) >0) {}
+	close(cmd)
+}
+
+function get_keys() {
+	cmd = "curl -s -i -b liveleak.cookies http://www.liveleak.com/item?a=add_item"
+	FS="'"
+	noparams=1
+	while((cmd|getline) >0 && noparams==1) {
+		if($0 ~ /multipart_params:/) {
+			noparams=0
+		}
+	}
+	while((cmd|getline) >0) {
+		if(NF >0) {
+			keys[$2] = $4
+		}
+		if($2 == "signature") {
+			close(cmd)
+			return
+		}
+	}
+}
+
+function dates() {
+	FS="-"
+	"date +%s-%Y/%b/%_d/ | tr -d \" \""|getline
+	epoch = $1
+	ymd = $2
+}
+
+function post() {
+	key = ymd keys["Filename"]
+	sub(/\$\{filename}/, fname, key)
+	sub(/\./, "_" epoch ".", key)
+	
+	cmd = sprintf("curl -s --trace trace.data -H \"Origin: http://www.liveleak.com\" -H \"User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:24.0) Gecko/20100101 Firefox/24.0\" --referer http://www.liveleak.com/item?a=add_item -F name=%s -F key=%s", fname, key)
+	cmd = sprintf(" %s -F name=\"%s\"", cmd, fname)
+	k = "Filename"; cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
+	k = "acl"; cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
+	k = "Expires"; cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
+	k = "Content-Type"; cmd = sprintf(" %s -F %s=", cmd, k)
+	k = "success_action_status"; cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
+	k = "AWSAccessKeyId"; cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
+	k = "policy"; cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
+	k = "signature"; cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
+	
+	cmd = sprintf(" %s -F file=@%s https://llbucs.s3.amazonaws.com/", cmd, fname)
+	
+	while((cmd|getline) >0) {
+		print $0
+	}
+	close(cmd)
+}
+
+
+BEGIN {
+	if(pw == "" || un == "" || fname =="") {
+		print("Not enough args expect ./liveleak -v un=$LIVELEAK_USERNAME -v pw=$LIVELEAK_PASSWORD -v fname=$FILENAME_TO_UPLOAD")
+		exit;
+	}
+	login()
+	get_keys()
+	dates()
+	post()
+}
+
+	{
+	}
+	
