@@ -47,16 +47,8 @@ function post() {
 	sub(/\./, "_" epoch ".", key)
 	
 	cmd = sprintf("curl -s --trace trace.data -H \"Origin: http://www.liveleak.com\" -H \"User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:24.0) Gecko/20100101 Firefox/24.0\" --referer http://www.liveleak.com/item?a=add_item -F name=%s -F key=%s", fname, key)
-	cmd = sprintf(" %s -F name=\"%s\"", cmd, fname)
-	k = "Filename"; cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
-	k = "acl"; cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
-	k = "Expires"; cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
-	k = "Content-Type"; cmd = sprintf(" %s -F %s=", cmd, k)
-	k = "success_action_status"; cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
-	k = "AWSAccessKeyId"; cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
-	k = "policy"; cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
-	k = "signature"; cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
-	
+	for(k in keys)
+		 cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
 	cmd = sprintf(" %s -F file=@%s https://llbucs.s3.amazonaws.com/", cmd, fname)
 	
 	while((cmd|getline) >0) {
