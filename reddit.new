@@ -1,0 +1,27 @@
+#!/bin/gawk -f
+
+
+#  ./reddit.new -v un=$REDDIT_USERNAME -v pw=$REDDIT_PASSWORD
+
+function login() {
+	cmd = "curl -s --dump-header reddit.cookies -F api_type=json -F rem=False -F user=" un " -F passwd=" pw " http://www.reddit.com/api/login"
+	while((cmd|getline) >0) {}
+	close(cmd)
+}
+
+function new_items() {
+	cmd = "curl -s -b reddit.cookies http://www.reddit.com/r/watchpeopledie/new.json"
+	while((cmd|getline) >0) { print $0}
+	close(cmd)
+}
+
+BEGIN {
+	if(pw == "" || un == "") {
+		print("Not enough args expect ./reddit.new -v un=$REDDIT_USERNAME -v pw=$REDDIT_PASSWORD")
+		exit;
+	}
+	login()
+	new_items()
+	exit
+}
+
