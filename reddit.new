@@ -1,7 +1,7 @@
 #!/bin/gawk -f
 
 
-#  ./reddit -v un=2liveleak -v pw=youtube2liveleak
+#  ./reddit.new -v un=$REDDIT_USERNAME -v pw=$REDDIT_PASSWORD
 
 function login() {
 	cmd = "curl -s --dump-header reddit.cookies -F api_type=json -F rem=False -F user=" un " -F passwd=" pw " http://www.reddit.com/api/login"
@@ -16,6 +16,10 @@ function new_items() {
 }
 
 BEGIN {
+	if(pw == "" || un == "") {
+		print("Not enough args expect ./reddit.new -v un=$REDDIT_USERNAME -v pw=$REDDIT_PASSWORD")
+		exit;
+	}
 	login()
 	new_items()
 	exit
