@@ -1,6 +1,6 @@
 #!/bin/gawk -f
 
-# ./liveleak -v un=$LIVELEAK_USERNAME -v pw=$LIVELEAK_PASSWORD -v fname=$FILENAME_TO_UPLOAD
+# ./liveleak -v un=$LIVELEAK_USERNAME -v pw=$LIVELEAK_PASSWORD -v title=$ITEM_TITLE -v body=$ITEM_BODY_TEXT -v fname=$FILENAME_TO_UPLOAD
 
 function login() {
 	cmd = "curl -s --dump-header liveleak.cookies -F user_name=" un " -F user_password=" pw " -F login=1 -o /dev/null http://www.liveleak.com/index.php"
@@ -9,13 +9,13 @@ function login() {
 }
 
 function setup() {
-	cmd = "curl -s -i -b liveleak.cookies -o /dev/null http://www.liveleak.com/"
+	cmd = "curl -s -b liveleak.cookies -o /dev/null http://www.liveleak.com/"
 	while((cmd|getline) >0) {}
 	close(cmd)
 }
 
 function get_keys() {
-	cmd = "curl -s -i -b liveleak.cookies http://www.liveleak.com/item?a=add_item"
+	cmd = "curl -s -b liveleak.cookies http://www.liveleak.com/item?a=add_item"
 	FS="'"
 	noparams=1
 	while((cmd|getline) >0 && noparams==1) {
@@ -36,17 +36,24 @@ function get_keys() {
 
 function dates() {
 	FS="-"
-	"date +%s-%Y/%b/%_d/ | tr -d \" \""|getline
+	"date +%s-%Y/%b/%_d/"|getline
+	gsub(/ /, "")
 	epoch = $1
 	ymd = $2
 }
 
-function post() {
+function US_date() {
+	"date +%m/%d/%Y"|getline
+	sub(/^0/, "")
+	us_date = $0
+}
+
+function post_to_S3() {
 	key = ymd keys["Filename"]
 	sub(/\$\{filename}/, fname, key)
 	sub(/\./, "_" epoch ".", key)
 	
-	cmd = sprintf("curl -s --trace trace.data -H \"Origin: http://www.liveleak.com\" -H \"User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:24.0) Gecko/20100101 Firefox/24.0\" --referer http://www.liveleak.com/item?a=add_item -F name=%s -F key=%s", fname, key)
+	cmd = sprintf("curl -s -H \"Origin: http://www.liveleak.com\" -H \"User-Agent: Reddit User Bot\" --referer http://www.liveleak.com/item?a=add_item -F name=%s -F key=%s", fname, key)
 	for(k in keys)
 		 cmd = sprintf(" %s -F %s=\"%s\"", cmd, k, keys[k])
 	cmd = sprintf(" %s -F file=@%s https://llbucs.s3.amazonaws.com/", cmd, fname)
@@ -57,18 +64,52 @@ function post() {
 	close(cmd)
 }
 
+function post_to_liveleak() {
+	connection = keys["Filename"]
+	sub(/LiveLeak-dot-com-/, "", connection)
+	sub(/-\$\{filename}/, "", connection)
+	US_date()
+	
+	cmd = sprintf("curl --junk-session-cookie -s -b liveleak.cookies \
+	-H \"User-Agent: Reddit User Bot\" \
+	--referer \"http://www.liveleak.com/item?a=add_item\" \
+	-H \"X-Requested-With: XMLHttpRequest\" \
+	-F address=\"%s\" \
+	-F agreed_to_tos=on \
+	-F body_text=\"%s\" \
+	-F category_array[]=18 \
+	-F connection=%s \
+	-F content_rating=MA \
+	-F disable_risky_commenters=1 \
+	-F enable_financial_support=0 \
+	-F financial_support_bitcoin_address=\"\" \
+	-F financial_support_message=\"\" \
+	-F financial_support_paypal_email=\"\" \
+	-F is_private=1 \
+	-F location_id=7353 \
+	-F occurrence_date_string=%s \
+	-F tag_string=\"reddit, /r/watchpeopledie\" \
+	-F title=\"%s\" http://www.liveleak.com/item?a=add_item&ajax=1" \
+	, "United Kingdom"\
+	, body\
+	, connection\
+	, us_date\
+	, title)
+	while((cmd|getline) >0) {
+		print $0
+	}
+}
+
 
 BEGIN {
-	if(pw == "" || un == "" || fname =="") {
-		print("Not enough args expect ./liveleak -v un=$LIVELEAK_USERNAME -v pw=$LIVELEAK_PASSWORD -v fname=$FILENAME_TO_UPLOAD")
+	if(pw == "" || un == "" || fname =="" || title == "" || body == "") {
+		print("Not enough args expect ./liveleak -v un=$LIVELEAK_USERNAME -v pw=$LIVELEAK_PASSWORD -v title=$ITEM_TITLE -v body=$ITEM_BODY_TEXT -v fname=$FILENAME_TO_UPLOAD")
 		exit;
 	}
 	login()
 	get_keys()
 	dates()
-	post()
+	post_to_S3()
+	post_to_liveleak()
+	exit
 }
-
-	{
-	}
-	
