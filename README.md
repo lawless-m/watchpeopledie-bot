@@ -15,4 +15,5 @@ Scan Reddit for new posts using the Reddit API and download them from youtube us
 TODO
 ----
 
-Upload files to Liveleak that have not already been uploaded
+* Upload files to Liveleak that have not already been uploaded
+* Post notice to appropriate Reddit thread
