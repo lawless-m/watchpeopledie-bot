@@ -85,7 +85,7 @@ function post_to_liveleak() {
 	-F financial_support_bitcoin_address=\"\" \
 	-F financial_support_message=\"\" \
 	-F financial_support_paypal_email=\"\" \
-	-F is_private=1 \
+	-F is_private=0 \
 	-F location_id=7353 \
 	-F occurrence_date_string=%s \
 	-F tag_string=\"reddit, /r/watchpeopledie\" \
