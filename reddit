@@ -1,0 +1,2 @@
+reddit.new | reddit_parse_json | missing | youtube-dl -i --id -a - --max-quality mp4
+

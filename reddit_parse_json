@@ -1,0 +1,11 @@
+#!/usr/bin/python
+
+import json
+import sys
+
+
+for c in json.loads(sys.stdin.read())["data"]["children"] :
+	if c["data"]["domain"] in ["youtube.com", "youtu.be"] :
+		print "%s\t%s\thttp://www.reddit.com%s" % (c["data"]["media"]["oembed"]["url"], c["data"]["title"].replace('"', "'"), c["data"]["permalink"])
+		
+# watchpeopledie-bot2 youtube2liveleak

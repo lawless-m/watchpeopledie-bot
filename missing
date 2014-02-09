@@ -1,0 +1,16 @@
+#!/bin/gawk -f
+
+# ./reddit < new.json | ./is_downloaded
+
+BEGIN {
+	FS="=|\t"
+}
+
+{
+	missing = "false"
+	# assume bash is the shell
+	cmd = "ls -- " $2 ".* &> /dev/null || echo true"
+	cmd|getline missing
+	if(missing == "true")
+		print $0
+}
