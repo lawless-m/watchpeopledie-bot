@@ -1,2 +1,2 @@
-reddit.new | reddit_parse_json | missing | youtube-dl -i --id -a - --max-quality mp4
+reddit.new -v un=$1 -v pw=$2 | reddit_parse_json | missing | tee -a downloads | youtube-dl -i --id -a - --max-quality mp4
 
