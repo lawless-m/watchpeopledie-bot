@@ -1,0 +1,11 @@
+#!/bin/gawk -f
+
+BEGIN { FS="\t" }
+
+{  
+	body = "Reddit mirror bot.<br>Original file from [url=" $2 "]" $2 "[/url].<br>For discussion visit [url=" $4 "]/r/watchpeopledie[/url] on Reddit"
+	cmd = "./liveleak -v un=" un " -v pw=" pw " -v fname=" $1 " -v title=\"" $3 "\" -v body=\"" body "\""
+	print cmd
+	while((cmd|getline) > 0) { print $0 }
+	close(cmd)
+}

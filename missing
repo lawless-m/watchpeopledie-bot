@@ -1,7 +1,5 @@
 #!/bin/gawk -f
 
-# ./reddit < new.json | ./is_downloaded
-
 BEGIN {
 	FS="=|\t"
 }

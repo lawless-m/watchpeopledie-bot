@@ -1,0 +1,14 @@
+#!/bin/gawk -f
+
+BEGIN {
+	FS="=|\t"
+}
+
+{
+	present = "false"
+	# assume bash is the shell
+	cmd = "ls -- " $2 ".* 2> /dev/null"
+	cmd|getline present
+	if(present != "")
+		print present "\t" $0
+}
