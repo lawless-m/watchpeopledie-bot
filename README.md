@@ -12,8 +12,10 @@ Given a username, password, title, body text and filename the *liveleak* script 
 
 Scan Reddit for new posts using the Reddit API and download them from youtube using youtube-dl
 
+Upload files to Liveleak that have not already been uploaded
+
 TODO
 ----
 
-* Upload files to Liveleak that have not already been uploaded
 * Post notice to appropriate Reddit thread
+
